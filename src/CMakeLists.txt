@@ -1,0 +1,1 @@
+target_sources(rsl_serialize PRIVATE dummy.cpp)

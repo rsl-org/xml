@@ -1,0 +1,12 @@
+#pragma once
+#include <rsl/serialize>
+#include <rsl/serializer/xml/serializer.hpp>
+namespace rsl {
+
+template <typename T>
+std::string to_xml(T&& value) {
+  auto visitor = serializer::_xml_impl::Serializer();
+  rsl::serialize(visitor, std::forward<T>(value));
+  return visitor.finalize();
+}
+}

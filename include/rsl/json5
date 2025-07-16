@@ -1,0 +1,6 @@
+#pragma once
+#include <rsl/serialize>
+
+namespace rsl {
+
+}

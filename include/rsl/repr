@@ -1,0 +1,36 @@
+#pragma once
+#include <rsl/serialize>
+#include <string>
+
+#include <meta>
+
+namespace rsl {
+template <auto V>
+struct Constant{};
+
+struct repr_tag{};
+
+template <typename T>
+constexpr std::string repr(T&& value, repr_tag={}){
+  return std::to_string(value);
+}
+
+template <auto V>
+constexpr std::string repr(Constant<V>, repr_tag={}){
+  return std::to_string(V);
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& stream, std::string(*)(T&&, repr_tag)){
+  return stream << std::string_view(define_static_string(display_string_of(remove_cvref(^^T))));
+}
+
+template <auto V>
+std::ostream& operator<<(std::ostream& stream, std::string(*fnc)(Constant<V>, repr_tag)){
+  return stream << fnc(Constant<V>{}, {});
+}
+}
+
+#ifdef RSL_GLOBAL_REPR
+using rsl::repr;
+#endif

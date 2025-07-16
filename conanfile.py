@@ -1,9 +1,9 @@
 from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
+import os
 
-
-class pkgRecipe(ConanFile):
-    name = "mypkg"
+class rslSerializeRecipe(ConanFile):
+    name = "rsl-serialize"
     version = "0.1"
     package_type = "library"
 
@@ -16,11 +16,17 @@ class pkgRecipe(ConanFile):
 
     # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False], "fPIC": [True, False]}
-    default_options = {"shared": False, "fPIC": True}
+    options = {
+        "shared": [True, False],
+        "fPIC": [True, False],
+        "examples": [True, False],
+        "editable": [True, False],
+        "tests" : [True, False]
+    }
+    default_options = {"shared": False, "fPIC": True, "examples": False, "editable": False, "tests": False}
 
     # Sources are located in the same place as this recipe, copy them to the recipe
-    exports_sources = "CMakeLists.txt", "src/*", "include/*"
+    exports_sources = "CMakeLists.txt", "src/*", "include/*", "test/*"
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -30,9 +36,13 @@ class pkgRecipe(ConanFile):
         if self.options.shared:
             self.options.rm_safe("fPIC")
 
+    def requirements(self):
+        self.requires("rsl-util/0.1", transitive_headers=True)
+        self.test_requires("gtest/1.14.0")
+
     def layout(self):
         cmake_layout(self)
-    
+
     def generate(self):
         deps = CMakeDeps(self)
         deps.generate()
@@ -41,13 +51,24 @@ class pkgRecipe(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.configure()
+        cmake.configure(
+            variables={
+                "BUILD_TESTING": self.options.tests,
+                "BUILD_EXAMPLES": self.options.examples,
+            })
         cmake.build()
+        if self.options.editable:
+            # package is in editable mode - make sure it's installed after building
+            cmake.install()
 
     def package(self):
         cmake = CMake(self)
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.libs = ["mypkg"]
-
+        self.cpp_info.set_property("cmake_file_name", "rsl-serialize")
+        self.cpp_info.components["config"].set_property("cmake_target_name", "rsl::serialize")
+        self.cpp_info.components["config"].includedirs = ["include"]
+        self.cpp_info.components["config"].libdirs = ["lib"]
+        self.cpp_info.components["config"].libs = ["rsl_serialize"]
+        # self.cpp_info.components["config"].requires = ["rsl-util::util"]
