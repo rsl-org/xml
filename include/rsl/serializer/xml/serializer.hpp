@@ -2,6 +2,8 @@
 #include "document.hpp"
 #include "rsl/serializer/xml/annotations.hpp"
 
+#include <format>
+
 #include <rsl/meta_traits>
 #include <rsl/serializer/machinery.hpp>
 #include <stdexcept>
@@ -27,7 +29,8 @@ class Serializer {
   }
 
   [[nodiscard]] std::string get_header() const {
-    return R"(<?xml version="1.0" encoding="UTF-8"?>)""\n";
+    return R"(<?xml version="1.0" encoding="UTF-8"?>)"
+           "\n";
   }
 
 public:
@@ -72,9 +75,7 @@ public:
       throw std::runtime_error("Root node must be a structure");
     }
 
-    if constexpr (!meta::has_annotation(meta.info, ^^xml::annotations::Attribute)) {
-      throw std::runtime_error("Non-structural fields can only be attributes.");
-    } else {
+    if constexpr (meta::has_annotation(meta.info, ^^xml::annotations::Attribute)) {
       if constexpr (!has_identifier(meta.info)) {
         throw std::runtime_error("Attributes must have identifiers.");
       } else {
@@ -82,15 +83,20 @@ public:
           if (value.has_value()) {
             cursor->attributes[std::string(identifier_of(meta.info))] = stringify_value(*value);
           }
-        }else {
+        } else {
           cursor->attributes[std::string(identifier_of(meta.info))] = stringify_value(value);
         }
       }
+    } else if constexpr (meta::has_annotation(meta.info, ^^xml::annotations::Raw)){
+      cursor = cursor->add({std::string(identifier_of(meta.info))});
+      cursor->raw_content = stringify_value(value);
+      cursor = cursor->parent;
+    } else {
+      throw std::runtime_error(std::format("Non-structural fields can only be attributes. {}",
+                                           define_static_string(display_string_of(meta.info))));
     }
   }
 
-  [[nodiscard]] std::string finalize() const {
-    return get_header() + document.stringify();
-  }
+  [[nodiscard]] std::string finalize() const { return get_header() + document.stringify(); }
 };
 }  // namespace rsl::serializer::_xml_impl

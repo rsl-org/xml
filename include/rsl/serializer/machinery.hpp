@@ -1,7 +1,9 @@
 #pragma once
 #include <meta>
 #include <ranges>
+#include <rsl/meta_traits>
 #include "util.hpp"
+#include "annotations.hpp"
 
 namespace rsl::serializer {
 
@@ -64,13 +66,16 @@ struct Meta<T> {
   void descend(F&& visitor, U&& value) {
     template for (constexpr auto Idx : std::views::iota(0ZU, members.size())) {
       constexpr auto M = members[Idx];
-      Member<Idx, M, typename[:type_of(M):]>{}.visit(visitor, value.[:M:]);
+      if constexpr (!meta::has_annotation(M, ^^annotations::Skip)){
+        Member<Idx, M, typename[:type_of(M):]>{}.visit(visitor, value.[:M:]);
+      }
     }
   }
 };
 
 template <std::ranges::range T>
-  requires std::constructible_from<std::initializer_list<typename T::value_type>>
+  requires(std::constructible_from<std::initializer_list<typename T::value_type>> &&
+           !std::convertible_to<T, std::string_view>)
 struct Meta<T> {
   using type                            = T;
   using element_type                    = typename T::value_type;
@@ -103,6 +108,18 @@ struct Meta<std::optional<T>> {
   using element_type                    = T;
   constexpr static std::meta::info info = dealias(^^type);
   constexpr static bool is_optional     = true;
+
+  template <typename S, typename F, typename U>
+    requires(std::same_as<std::remove_cvref_t<U>, type>)
+  void visit(this S&& self, F&& visitor, U&& value) {
+    std::invoke(std::forward<F>(visitor), std::forward<S>(self), std::forward<U>(value));
+  }
+};
+
+template <std::convertible_to<std::string> T>
+struct Meta<T> {
+  using type                            = T;
+  constexpr static std::meta::info info = ^^T;
 
   template <typename S, typename F, typename U>
     requires(std::same_as<std::remove_cvref_t<U>, type>)
