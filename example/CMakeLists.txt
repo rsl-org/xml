@@ -6,3 +6,4 @@ function(DEFINE_EXAMPLE TARGET)
 endfunction()
 
 DEFINE_EXAMPLE(xml)
+DEFINE_EXAMPLE(repr)

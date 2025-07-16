@@ -8,33 +8,70 @@
 
 namespace rsl::serializer::_repr_impl {
 
-struct SerializerBase {
-  template <typename T, typename V>
-  void descend(this T&& self, V&& value){
-    Meta<std::remove_cvref_t<T>>::descend(std::forward<T>(self), std::forward<V>(value));
-  }
-};
-
-class Serializer : SerializerBase{
-  std::size_t nesting_level = 0;
+class Serializer {
   std::ostringstream out;
+  bool separate     = false;
+  std::size_t level = 0;
+
+  void print_indent() {
+    // out << "\n";
+    // out << std::string(2 * level, ' ');
+  }
+
+  void print_separator() {
+    if (separate) {
+      out << ", ";
+    } else {
+      separate = true;
+    }
+    print_indent();
+  }
+
+  void increase_nesting() {
+    separate = false;
+    out << '{';
+    ++level;
+  }
+
+  void decrease_nesting() {
+    --level;
+    print_indent();
+    out << '}';
+    separate = true;
+  }
+
 public:
   Serializer() = default;
 
+  std::string finalize() const {
+    return out.str();
+  }
+
   template <has_members R, typename T>
-  void operator()(R, T&& value) {
-    out << '{';
-    ++nesting_level;
-    descend(std::forward<T>(value));
-    --nesting_level;
-    out << '}';
+  void operator()(R meta, T&& value) {
+    print_separator();
+
+    out << identifier_of(R::info);
+    increase_nesting();
+    meta.descend(*this, std::forward<T>(value));
+    decrease_nesting();
+  }
+
+  template <is_iterable R, typename T>
+  void operator()(R meta, T&& value) {
+    print_separator();
+    out << define_static_string(display_string_of(type_of(R::info)));
+    increase_nesting();
+    meta.descend(*this, std::forward<T>(value));
+    decrease_nesting();
   }
 
   template <typename R, typename T>
-    requires (std::is_scalar_v<T>)
+    requires(std::is_arithmetic_v<std::remove_cvref_t<T>>)
   void operator()(R, T&& value) {
+    print_separator();
     out << value;
   }
 };
 
-}
+}  // namespace rsl::serializer::_repr_impl

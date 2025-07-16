@@ -22,5 +22,34 @@ TEST(Xml, Nested) {
   };
 
   auto result = rsl::to_xml(Outer{.foo={}});
-  ASSERT_EQ(result, xml_head + "<Outer>\n  <foo/>\n</Outer>"s);
+  ASSERT_EQ(result, xml_head + "<Outer>\n  <Inner/>\n</Outer>"s);
+}
+
+TEST(Xml, Attributes) {
+  struct Test{
+    [[=rsl::xml::attribute]] std::string name;
+    [[=rsl::xml::attribute]] unsigned test = 123;
+  };
+  auto obj = Test("foo");
+  auto result = rsl::to_xml(obj);
+  ASSERT_EQ(result, xml_head + R"(<Test test="123" name="foo"/>)"s);
+}
+
+TEST(Xml, OptionalAttributes) {
+  struct Test{
+    [[=rsl::xml::attribute]] std::string name;
+    [[=rsl::xml::attribute]] std::optional<unsigned> test;
+  };
+  auto obj = Test("foo");
+  auto result = rsl::to_xml(obj);
+  ASSERT_EQ(result, xml_head + R"(<Test name="foo"/>)"s);
+}
+
+TEST(Xml, RawNodes) {
+  struct Test{
+    [[=rsl::xml::raw]] std::string foo;    
+  };
+  auto obj = Test("zoinks");
+  auto result = rsl::to_xml(obj);
+  ASSERT_EQ(result, xml_head + "<Test>\n  <foo>zoinks</foo>\n</Test>"s);
 }
