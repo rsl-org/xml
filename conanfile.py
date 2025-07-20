@@ -67,8 +67,8 @@ class rslSerializeRecipe(ConanFile):
 
     def package_info(self):
         self.cpp_info.set_property("cmake_file_name", "rsl-serialize")
-        self.cpp_info.components["config"].set_property("cmake_target_name", "rsl::serialize")
-        self.cpp_info.components["config"].includedirs = ["include"]
-        self.cpp_info.components["config"].libdirs = ["lib"]
-        self.cpp_info.components["config"].libs = ["rsl_serialize"]
-        # self.cpp_info.components["config"].requires = ["rsl-util::util"]
+        self.cpp_info.components["serialize"].set_property("cmake_target_name", "rsl::serialize")
+        self.cpp_info.components["serialize"].includedirs = ["include"]
+        self.cpp_info.components["serialize"].libdirs = ["lib"]
+        self.cpp_info.components["serialize"].libs = ["rsl_serialize"]
+        self.cpp_info.components["serialize"].requires = ["rsl-util::util"]
