@@ -2,8 +2,8 @@ from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
 import os
 
-class rslSerializeRecipe(ConanFile):
-    name = "rsl-serialize"
+class rslXmlRecipe(ConanFile):
+    name = "rsl-xml"
     version = "0.1"
     package_type = "library"
 
@@ -66,9 +66,9 @@ class rslSerializeRecipe(ConanFile):
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.set_property("cmake_file_name", "rsl-serialize")
-        self.cpp_info.components["serialize"].set_property("cmake_target_name", "rsl::serialize")
-        self.cpp_info.components["serialize"].includedirs = ["include"]
-        self.cpp_info.components["serialize"].libdirs = ["lib"]
-        self.cpp_info.components["serialize"].libs = ["rsl_serialize"]
-        self.cpp_info.components["serialize"].requires = ["rsl-util::util"]
+        self.cpp_info.set_property("cmake_file_name", "rsl-xml")
+        self.cpp_info.components["xml"].set_property("cmake_target_name", "rsl::xml")
+        self.cpp_info.components["xml"].includedirs = ["include"]
+        self.cpp_info.components["xml"].libdirs = ["lib"]
+        self.cpp_info.components["xml"].libs = ["rsl_xml"]
+        self.cpp_info.components["xml"].requires = ["rsl-util::util"]

@@ -1,1 +1,1 @@
-target_sources(rsl_serialize PRIVATE dummy.cpp)
+target_sources(rsl_xml PRIVATE dummy.cpp)
