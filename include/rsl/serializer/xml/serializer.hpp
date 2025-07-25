@@ -15,7 +15,6 @@ class Serializer {
   XmlNode document;
   XmlNode* cursor = nullptr;
 
-
   static std::string stringify_value(bool value) { return value ? "true" : "false"; }
 
   template <typename T>
@@ -29,14 +28,14 @@ class Serializer {
     output.reserve(value.size());
 
     for (char ch : value) {
-        switch (ch) {
-            case '&':  output.append("&amp;");  break;
-            case '<':  output.append("&lt;");   break;
-            case '>':  output.append("&gt;");   break;
-            case '"':  output.append("&quot;"); break;
-            case '\'': output.append("&#39;");  break;
-            default:   output.push_back(ch);    break;
-        }
+      switch (ch) {
+        case '&': output.append("&amp;"); break;
+        case '<': output.append("&lt;"); break;
+        case '>': output.append("&gt;"); break;
+        case '"': output.append("&quot;"); break;
+        case '\'': output.append("&#39;"); break;
+        default: output.push_back(ch); break;
+      }
     }
     return output;
   }
@@ -48,6 +47,12 @@ class Serializer {
 
 public:
   Serializer() = default;
+
+  // template <is_optional R, typename T>
+  // void operator()(R meta, T&& value) {
+  //   // check for annotation?
+  //   meta.descend(*this, std::forward<T>(value));
+  // }
 
   template <has_members R, typename T>
   void operator()(R meta, T&& value) {
@@ -79,7 +84,7 @@ public:
       throw std::runtime_error("Root node must be a structure");
     }
 
-    meta.descend(*this, std::forward<T>(value));
+    meta.descend(*this, value);
   }
 
   template <typename R, typename T>
@@ -93,32 +98,29 @@ public:
         throw std::runtime_error("Attributes must have identifiers.");
       } else {
         if constexpr (is_optional<R>) {
-          if (value.has_value()) {
-            cursor->attributes[std::string(identifier_of(meta.info))] = stringify_value(*value);
+          if (!value.has_value()) {
+            return;
           }
+          cursor->attributes[std::string(identifier_of(meta.info))] = stringify_value(*value);
         } else {
           cursor->attributes[std::string(identifier_of(meta.info))] = stringify_value(value);
         }
       }
-    } else if constexpr (meta::has_annotation(meta.info, ^^xml::annotations::Raw)){
+    } else if constexpr (meta::has_annotation(meta.info, ^^xml::annotations::Raw)) {
       if constexpr (is_optional<R>) {
         if (!value.has_value()) {
           return;
         }
-      }
-
-      cursor = cursor->add({std::string(identifier_of(meta.info))});
-      if constexpr (is_optional<R>) {
-        if (value.has_value()) {
-          cursor->raw_content = stringify_value(*value);
-        }
+        cursor->raw_content = stringify_value(*value);
       } else {
         cursor->raw_content = stringify_value(value);
       }
-      cursor = cursor->parent;
-    } else {
-      throw std::runtime_error(std::format("Non-structural fields can only be attributes. {}",
-                                           define_static_string(display_string_of(meta.info))));
+    } else if constexpr (is_optional<R> &&
+                         meta::has_annotation(meta.info, ^^xml::annotations::Node)) {
+      if (!value.has_value()) {
+        return;
+      }
+      (*this)(rsl::serializer::Meta<typename std::remove_cvref_t<T>::value_type>(), *value);
     }
   }
 
