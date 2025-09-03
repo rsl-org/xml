@@ -67,5 +67,5 @@ class rslXmlRecipe(ConanFile):
         self.cpp_info.components["xml"].set_property("cmake_target_name", "rsl::xml")
         self.cpp_info.components["xml"].includedirs = ["include"]
         self.cpp_info.components["xml"].libdirs = ["lib"]
-        self.cpp_info.components["xml"].libs = ["rsl_xml"]
+        self.cpp_info.components["xml"].libs = ["rsl-xml"]
         self.cpp_info.components["xml"].requires = ["rsl-util::util"]
