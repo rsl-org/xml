@@ -20,10 +20,9 @@ class rslXmlRecipe(ConanFile):
         "shared": [True, False],
         "fPIC": [True, False],
         "examples": [True, False],
-        "editable": [True, False],
         "tests" : [True, False]
     }
-    default_options = {"shared": False, "fPIC": True, "examples": False, "editable": False, "tests": False}
+    default_options = {"shared": False, "fPIC": True, "examples": False, "tests": False}
 
     # Sources are located in the same place as this recipe, copy them to the recipe
     exports_sources = "CMakeLists.txt", "src/*", "include/*", "test/*"
@@ -57,9 +56,7 @@ class rslXmlRecipe(ConanFile):
                 "BUILD_EXAMPLES": self.options.examples,
             })
         cmake.build()
-        if self.options.editable:
-            # package is in editable mode - make sure it's installed after building
-            cmake.install()
+        cmake.install()
 
     def package(self):
         cmake = CMake(self)
@@ -70,5 +67,5 @@ class rslXmlRecipe(ConanFile):
         self.cpp_info.components["xml"].set_property("cmake_target_name", "rsl::xml")
         self.cpp_info.components["xml"].includedirs = ["include"]
         self.cpp_info.components["xml"].libdirs = ["lib"]
-        self.cpp_info.components["xml"].libs = ["rsl_xml"]
+        self.cpp_info.components["xml"].libs = ["rsl-xml"]
         self.cpp_info.components["xml"].requires = ["rsl-util::util"]

@@ -1,3 +1,3 @@
-target_sources(rsl_serialize_test PRIVATE 
+target_sources(rsl-serialize-test PRIVATE
   basic.cpp
 )
